@@ -1,0 +1,20 @@
+fastapi
+uvicorn[standard]
+
+
+sqlalchemy
+psycopg2-binary
+
+# Auth & Security
+passlib[bcrypt]
+python-jose[cryptography]
+pydantic[email]
+
+# Environment Variables (optional, for .env support)
+python-dotenv
+
+# OAuth2 support
+python-multipart
+
+# Email validation (if needed)
+email-validator
