@@ -14,5 +14,7 @@ app.include_router(super_admin.router, prefix="/superadmin", tags=["Superadmin"]
 app.include_router(admin.router, prefix="/admin", tags=["Admin"])
 app.include_router(user.router, prefix="/user", tags=["User"])
 
-
+@app.get('/')
+async def index():
+    return {"Status": "Server running"}
 
