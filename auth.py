@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import models 
 from dotenv import load_dotenv
@@ -9,7 +8,7 @@ import os
 
 load_dotenv()
 
-SECRET_KEY = os.getenv("SECRET_KEY")#"ccece4dae97fce0692c246e61a9e4703a7515005008e2e05a3f1ef7a5239fc9c"
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 REFRESH_SECRET_KEY ="ej114v99vuuOsDjXV6PEVrpPNrm4RCROFpIMgsvJEfs"
