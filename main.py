@@ -1,8 +1,5 @@
-from fastapi import FastAPI, Depends, HTTPException, Body , UploadFile, File
-from sqlalchemy.orm import Session
-from fastapi.security import OAuth2PasswordRequestForm
-from database import schemas, models,connection
-import auth,dependencies
+from fastapi import FastAPI
+from database import models,connection
 from routers import auth_router, super_admin, admin, user
 
 app = FastAPI()
