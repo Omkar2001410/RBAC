@@ -8,12 +8,19 @@ class Role(str, Enum):
 
 class UserCreate(BaseModel):
     username: str
+    fname: str
+    lname: str
+    email: str
     password: str
+    cpassword: str
     
 
 class UserOut(BaseModel):
     id: int
     username: str
+    fname: str
+    lname: str
+    email: str
     
     
     class Config:
@@ -52,4 +59,5 @@ class UserPost(BaseModel):
 
 class UserPostOut(BaseModel):
     username: str
+    email : str
     posts: list[UserPost] =[]

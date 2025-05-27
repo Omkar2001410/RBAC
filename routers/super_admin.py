@@ -11,6 +11,17 @@ router = APIRouter()
 def list_admin(db: Session = Depends(get_db), user = Depends(require_role(Role.superadmin))):
     return db.query(User).filter(User.role=='admin').all()
 
+@router.get("/admin/{user_id}",response_model=UserOut)
+async def get_admin(id: str,db: Session = Depends(get_db), user = Depends(require_role(Role.superadmin))):
+    try:
+        user = db.query(User).filter(User.id == id,User.role == 'admin').first()
+        
+        if user is None:
+            raise HTTPException(status_code=404, detail="Admin does not exist")
+        
+        return user
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Some error occured {e}")
 @router.delete("/admin/{user_id}")
 async def delete_admin(id: str,db: Session = Depends(get_db), user = Depends(require_role(Role.superadmin))):
     try:
@@ -27,9 +38,23 @@ async def delete_admin(id: str,db: Session = Depends(get_db), user = Depends(req
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Some error occured {e}")
     
+
+    
 @router.get("/users", response_model=list[UserOut])
 def list_users(db: Session = Depends(get_db), user = Depends(require_role(Role.superadmin))):
     return db.query(User).filter(User.role=='user').all()
+
+@router.get("/user/{user_id}",response_model=UserOut)
+async def get_user(id: str,db: Session = Depends(get_db), user = Depends(require_role(Role.superadmin))):
+    try:
+        user = db.query(User).filter(User.id == id,User.role == 'user').first()
+        
+        if user is None:
+            raise HTTPException(status_code=404, detail="User does not exist")
+        
+        return user
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Some error occured {e}")
 
 @router.delete("/user/{user_id}")
 async def delete_User(id: str,db: Session = Depends(get_db), user = Depends(require_role(Role.superadmin))):
@@ -92,7 +117,14 @@ def create_admin(new: UserCreate,
     db_user = get_user_by_username(db, new.username)
     if db_user:
         raise HTTPException(status_code=400, detail="Username already registered")
-    new_user = User(username=new.username, password=get_password_hash(new.password))
+    if new.password != new.cpassword:
+        raise HTTPException(status_code=400, detail="Password Missmatch")
+    new_user = User(username=new.username,
+                    fname = new.fname,
+                    lname = new.lname,
+                    email = new.email,
+                    password=get_password_hash(new.password),
+                    role = new_role)
     db.add(new_user)
     db.commit()
-    return {"msg": "Admin created"}
+    return {"msg": f"{new_role} created"}
