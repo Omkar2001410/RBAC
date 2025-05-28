@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from database.models import User, Role
+from database.models import User, LogoutLog
 from database.schemas import UserCreate, Token
 from auth import  create_access_token, get_user_by_username, verify_password, get_password_hash, authenticate_user
 from dependencies import get_db,get_current_user
 from fastapi.security import OAuth2PasswordRequestForm
-
+import uuid
 
 router = APIRouter()
 
@@ -30,9 +30,19 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     user = authenticate_user(db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(status_code=400, detail="Invalid credentials")
+    user.is_active = True
+    db.commit()
+
     access_token = create_access_token(data={"sub": user.username})
     return {"access_token": access_token,"token_type": "bearer"}
 
 @router.get("/protected")
 def protected_route(current_user: User = Depends(get_current_user)):
     return {"message": f"Hello, {current_user.fname}!"}
+
+@router.post("/logout")
+def logout(current_user: str = Depends(get_current_user),db: Session = Depends(get_db)):
+    logout_log = LogoutLog(user_id= current_user.id)
+    db.add(logout_log)
+    db.commit()
+    return {"message": "Logged out successfully"}

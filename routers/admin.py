@@ -6,6 +6,11 @@ from dependencies import get_db, require_role
 
 router = APIRouter()
 
+@router.get("/active-users")
+def get_active_users(db: Session = Depends(get_db),user = Depends(require_role(Role.admin))):
+    users = db.query(User).filter(User.is_active == True,User.role == 'user').all()
+    return {"count": len(users), "users": [f"{u.fname} {u.lname}" for u in users]}
+
 @router.get("/users", response_model=list[UserOut])
 def list_users(db: Session = Depends(get_db), user = Depends(require_role(Role.admin))):
     return db.query(User).filter(User.role == 'user').all()
