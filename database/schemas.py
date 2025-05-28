@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from enum import Enum
+from uuid import UUID
 
 class Role(str, Enum):
     superadmin = "superadmin"
@@ -16,7 +17,7 @@ class UserCreate(BaseModel):
     
 
 class UserOut(BaseModel):
-    id: int
+    id: UUID
     username: str
     fname: str
     lname: str
@@ -61,3 +62,6 @@ class UserPostOut(BaseModel):
     username: str
     email : str
     posts: list[UserPost] =[]
+
+class TotalAdmin(BaseModel):
+    total: str

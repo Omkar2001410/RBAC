@@ -1,16 +1,28 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session,joinedload
 from database.models import User, Role,Post
-from database.schemas import UserOut,UserPostOut, UserCreate, PostUpdate
+from database.schemas import UserOut,UserPostOut, UserCreate, PostUpdate, TotalAdmin
 from dependencies import get_db, require_role
 from auth import get_user_by_username, get_password_hash
 
+
 router = APIRouter()
+
+
+@router.get("/active-users")
+def get_active_users(db: Session = Depends(get_db),user = Depends(require_role(Role.superadmin))):
+    users = db.query(User).filter(User.is_active == True,User.role == 'user').all()
+    return {"count": len(users), "users": [f"{u.fname} {u.lname}" for u in users]}
+
+@router.get("/active-admin")
+def get_active_admin(db: Session = Depends(get_db),user = Depends(require_role(Role.superadmin))):
+    users = db.query(User).filter(User.is_active == True,User.role == 'admin').all()
+    return {"count": len(users), "users": [f"{u.fname} {u.lname}" for u in users]}
 
 @router.get("/admin", response_model=list[UserOut])
 def list_admin(db: Session = Depends(get_db), user = Depends(require_role(Role.superadmin))):
     return db.query(User).filter(User.role=='admin').all()
-
+    
 @router.get("/admin/{user_id}",response_model=UserOut)
 async def get_admin(id: str,db: Session = Depends(get_db), user = Depends(require_role(Role.superadmin))):
     try:
@@ -22,6 +34,7 @@ async def get_admin(id: str,db: Session = Depends(get_db), user = Depends(requir
         return user
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Some error occured {e}")
+  
 @router.delete("/admin/{user_id}")
 async def delete_admin(id: str,db: Session = Depends(get_db), user = Depends(require_role(Role.superadmin))):
     try:
@@ -100,7 +113,7 @@ async def update_post(
     return post
     
 @router.put("/users/{user_id}/role")
-def assign_role(user_id: int, new_role: Role, db: Session = Depends(get_db), user = Depends(require_role(Role.superadmin))):
+def assign_role(user_id: str, new_role: Role, db: Session = Depends(get_db), user = Depends(require_role(Role.superadmin))):
     target_user = db.query(User).filter(User.id == user_id).first()
     if not target_user:
         raise HTTPException(status_code=404, detail="User not found")
