@@ -63,5 +63,3 @@ class UserPostOut(BaseModel):
     email : str
     posts: list[UserPost] =[]
 
-class TotalAdmin(BaseModel):
-    total: str

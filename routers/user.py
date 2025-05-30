@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, Body , UploadFile , APIRouter
+from fastapi import Depends, HTTPException, Body , APIRouter
 from sqlalchemy.orm import Session
 from database import schemas, models,connection
 import dependencies
@@ -29,7 +29,7 @@ async def update_post(
     db: Session = Depends(dependencies.get_db), 
     current_user: models.User = Depends(dependencies.get_current_user),
     update_post: schemas.PostUpdate = Body(...),
-    user = Depends(dependencies.require_role(Role.user))
+    user = Depends(dependencies.require_role(Role.superadmin,Role.admin,Role.user))
     ):
     post = db.query(models.Post).filter(models.Post.id == post_id, models.Post.owner_id == current_user.id).first()
     if not post:
@@ -47,7 +47,7 @@ async def delete_Post(
     post_id: str,
     db: Session = Depends(dependencies.get_db), 
     current_user: models.User = Depends(dependencies.get_current_user),
-    user = Depends(dependencies.require_role(Role.user))
+    user = Depends(dependencies.require_role(Role.superadmin,Role.admin,Role.user))
     ):
     try:
         post = db.query(models.Post).filter(models.Post.id == post_id, models.Post.owner_id == current_user.id).first()
@@ -67,7 +67,7 @@ async def delete_Post(
 @router.get("/posts", response_model=list[schemas.PostOut])
 def read_posts(db: Session = Depends(dependencies.get_db),
                current_user: models.User = Depends(dependencies.get_current_user),
-               user = Depends(dependencies.require_role(Role.user))):
+               user = Depends(dependencies.require_role(Role.superadmin,Role.admin,Role.user))):
     try:
         return db.query(models.Post).filter(models.Post.owner_id == current_user.id).all()
     

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session, joinedload
 from database.models import User, Role, Post
 from database.schemas import UserOut,UserPostOut
@@ -7,26 +7,28 @@ from dependencies import get_db, require_role
 router = APIRouter()
 
 @router.get("/active-users")
-def get_active_users(db: Session = Depends(get_db),user = Depends(require_role(Role.admin))):
+def get_active_users(db: Session = Depends(get_db),user = Depends(require_role(Role.superadmin, Role.admin))):
     users = db.query(User).filter(User.is_active == True,User.role == 'user').all()
     return {"count": len(users), "users": [f"{u.fname} {u.lname}" for u in users]}
 
 @router.get("/users", response_model=list[UserOut])
-def list_users(db: Session = Depends(get_db), user = Depends(require_role(Role.admin))):
-    return db.query(User).filter(User.role == 'user').all()
+def list_users(db: Session = Depends(get_db), user = Depends(require_role(Role.superadmin,Role.admin))):
+    return db.query(User).filter(User.role=='user').all()
 
-    
-@router.get("/Userdata", response_model=list[UserPostOut])
-def user_data(db: Session = Depends(get_db),
-               user = Depends(require_role(Role.admin))):
+@router.get("/user/{user_id}",response_model=UserOut)
+async def get_user(id: str,db: Session = Depends(get_db), user = Depends(require_role(Role.superadmin))):
     try:
-        return db.query(User).options(joinedload(User.posts)).filter(User.role == 'user').all()
-    
+        user = db.query(User).filter(User.id == id,User.role == 'user').first()
+        
+        if user is None:
+            raise HTTPException(status_code=404, detail="User does not exist")
+        
+        return user
     except Exception as e:
-        raise HTTPException(status_code=200, detail=f"Empty")
-    
+        raise HTTPException(status_code=500, detail=f"Some error occured {e}")
+
 @router.delete("/user/{user_id}")
-async def delete_User(id: str,db: Session = Depends(get_db), user = Depends(require_role(Role.admin))):
+async def delete_User(id: str,db: Session = Depends(get_db), user = Depends(require_role(Role.superadmin,Role.admin))):
     try:
         user = db.query(User).filter(User.id == id,User.role == 'user').first()
         
@@ -40,3 +42,12 @@ async def delete_User(id: str,db: Session = Depends(get_db), user = Depends(requ
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Some error occured {e}")
+
+@router.get("/Userdata", response_model=list[UserPostOut])
+def user_data(db: Session = Depends(get_db),
+               user = Depends(require_role(Role.superadmin,Role.admin))):
+    try:
+        return db.query(User).options(joinedload(User.posts)).filter(User.role == 'user').all()
+    
+    except Exception as e:
+        raise HTTPException(status_code=200, detail=f"Empty")
